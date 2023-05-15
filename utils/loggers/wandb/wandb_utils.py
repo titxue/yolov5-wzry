@@ -90,14 +90,14 @@ def process_wandb_config_ddp_mode(opt):
         api = wandb.Api()
         train_artifact = api.artifact(remove_prefix(data_dict['train']) + ':' + opt.artifact_alias)
         train_dir = train_artifact.download()
-        train_path = Path(train_dir) / 'data/images/'
+        train_path = Path(train_dir) / 'data/JPEGImages/'
         data_dict['train'] = str(train_path)
 
     if isinstance(data_dict['val'], str) and data_dict['val'].startswith(WANDB_ARTIFACT_PREFIX):
         api = wandb.Api()
         val_artifact = api.artifact(remove_prefix(data_dict['val']) + ':' + opt.artifact_alias)
         val_dir = val_artifact.download()
-        val_path = Path(val_dir) / 'data/images/'
+        val_path = Path(val_dir) / 'data/JPEGImages/'
         data_dict['val'] = str(val_path)
     if train_dir or val_dir:
         ddp_data_path = str(Path(val_dir) / 'wandb_local_data.yaml')
@@ -246,10 +246,10 @@ class WandbLogger():
                 data_dict.get('val'), opt.artifact_alias)
 
         if self.train_artifact_path is not None:
-            train_path = Path(self.train_artifact_path) / 'data/images/'
+            train_path = Path(self.train_artifact_path) / 'data/JPEGImages/'
             data_dict['train'] = str(train_path)
         if self.val_artifact_path is not None:
-            val_path = Path(self.val_artifact_path) / 'data/images/'
+            val_path = Path(self.val_artifact_path) / 'data/JPEGImages/'
             data_dict['val'] = str(val_path)
 
         if self.val_artifact is not None:
@@ -406,7 +406,7 @@ class WandbLogger():
 
         arguments:
         dataset -- instance of LoadImagesAndLabels class used to iterate over the data to build Table
-        class_to_id -- hash map that maps class ids to labels
+        class_to_id -- hash map that maps class ids to Annotations
         name -- name of the artifact
 
         returns:
@@ -418,13 +418,13 @@ class WandbLogger():
         img_files = tqdm(dataset.im_files) if not img_files else img_files
         for img_file in img_files:
             if Path(img_file).is_dir():
-                artifact.add_dir(img_file, name='data/images')
-                labels_path = 'labels'.join(dataset.path.rsplit('images', 1))
-                artifact.add_dir(labels_path, name='data/labels')
+                artifact.add_dir(img_file, name='data/JPEGImages')
+                labels_path = 'Annotations'.join(dataset.path.rsplit('JPEGImages', 1))
+                artifact.add_dir(labels_path, name='data/Annotations')
             else:
-                artifact.add_file(img_file, name='data/images/' + Path(img_file).name)
+                artifact.add_file(img_file, name='data/JPEGImages/' + Path(img_file).name)
                 label_file = Path(img2label_paths([img_file])[0])
-                artifact.add_file(str(label_file), name='data/labels/' +
+                artifact.add_file(str(label_file), name='data/Annotations/' +
                                   label_file.name) if label_file.exists() else None
         table = wandb.Table(columns=["id", "train_image", "Classes", "name"])
         class_set = wandb.Classes([{'id': id, 'name': name} for id, name in class_to_id.items()])
@@ -453,7 +453,7 @@ class WandbLogger():
         arguments:
         predn (list): list of predictions in the native space in the format - [xmin, ymin, xmax, ymax, confidence, class]
         path (str): local path of the current evaluation image
-        names (dict(int, str)): hash map that maps class ids to labels
+        names (dict(int, str)): hash map that maps class ids to Annotations
         """
         class_set = wandb.Classes([{'id': id, 'name': name} for id, name in names.items()])
         box_data = []

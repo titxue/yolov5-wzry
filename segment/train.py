@@ -223,7 +223,7 @@ def train(hyp, opt, device, callbacks):  # hyp is path/to/hyp.yaml or hyp dictio
 
             if plots:
                 plot_labels(labels, names, save_dir)
-        # callbacks.run('on_pretrain_routine_end', labels, names)
+        # callbacks.run('on_pretrain_routine_end', Annotations, names)
 
     # DDP mode
     if cuda and RANK != -1:

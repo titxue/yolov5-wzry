@@ -9,21 +9,21 @@
 
 # Train/val/test sets as 1) dir: path/to/imgs, 2) file: path/to/imgs.txt, or 3) list: [path/to/imgs1, path/to/imgs2, ..]
 path: ../datasets/GlobalWheat2020  # dataset root dir
-train: # train images (relative to 'path') 3422 images
-  - images/arvalis_1
-  - images/arvalis_2
-  - images/arvalis_3
-  - images/ethz_1
-  - images/rres_1
-  - images/inrae_1
-  - images/usask_1
-val: # val images (relative to 'path') 748 images (WARNING: train set contains ethz_1)
-  - images/ethz_1
-test: # test images (optional) 1276 images
-  - images/utokyo_1
-  - images/utokyo_2
-  - images/nau_1
-  - images/uq_1
+train: # train JPEGImages (relative to 'path') 3422 JPEGImages
+  - JPEGImages/arvalis_1
+  - JPEGImages/arvalis_2
+  - JPEGImages/arvalis_3
+  - JPEGImages/ethz_1
+  - JPEGImages/rres_1
+  - JPEGImages/inrae_1
+  - JPEGImages/usask_1
+val: # val JPEGImages (relative to 'path') 748 JPEGImages (WARNING: train set contains ethz_1)
+  - JPEGImages/ethz_1
+test: # test JPEGImages (optional) 1276 JPEGImages
+  - JPEGImages/utokyo_1
+  - JPEGImages/utokyo_2
+  - JPEGImages/nau_1
+  - JPEGImages/uq_1
 
 # Classes
 names:

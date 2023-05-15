@@ -258,7 +258,7 @@ def train(opt, device):
                     f"\nVisualize:       https://netron.app\n")
 
         # Plot examples
-        images, labels = (x[:25] for x in next(iter(testloader)))  # first 25 images and labels
+        images, labels = (x[:25] for x in next(iter(testloader)))  # first 25 JPEGImages and Annotations
         pred = torch.max(ema.ema(images.to(device)), 1)[1]
         file = imshow_cls(images, labels, pred, model.names, verbose=False, f=save_dir / 'test_images.jpg')
 
@@ -276,7 +276,7 @@ def parse_opt(known=False):
     parser.add_argument('--batch-size', type=int, default=64, help='total batch size for all GPUs')
     parser.add_argument('--imgsz', '--img', '--img-size', type=int, default=224, help='train, val image size (pixels)')
     parser.add_argument('--nosave', action='store_true', help='only save final checkpoint')
-    parser.add_argument('--cache', type=str, nargs='?', const='ram', help='--cache images in "ram" (default) or "disk"')
+    parser.add_argument('--cache', type=str, nargs='?', const='ram', help='--cache JPEGImages in "ram" (default) or "disk"')
     parser.add_argument('--device', default='', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
     parser.add_argument('--workers', type=int, default=8, help='max dataloader workers (per RANK in DDP mode)')
     parser.add_argument('--project', default=ROOT / 'runs/train-cls', help='save to project/name')

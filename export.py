@@ -140,7 +140,7 @@ def export_onnx(model, im, file, opset, dynamic, simplify, prefix=colorstr('ONNX
 
     output_names = ['output0', 'output1'] if isinstance(model, SegmentationModel) else ['output0']
     if dynamic:
-        dynamic = {'images': {0: 'batch', 2: 'height', 3: 'width'}}  # shape(1,3,640,640)
+        dynamic = {'JPEGImages': {0: 'batch', 2: 'height', 3: 'width'}}  # shape(1,3,640,640)
         if isinstance(model, SegmentationModel):
             dynamic['output0'] = {0: 'batch', 1: 'anchors'}  # shape(1,25200,85)
             dynamic['output1'] = {0: 'batch', 2: 'mask_height', 3: 'mask_width'}  # shape(1,32,160,160)
@@ -154,7 +154,7 @@ def export_onnx(model, im, file, opset, dynamic, simplify, prefix=colorstr('ONNX
         verbose=False,
         opset_version=opset,
         do_constant_folding=True,
-        input_names=['images'],
+        input_names=['JPEGImages'],
         output_names=output_names,
         dynamic_axes=dynamic or None)
 

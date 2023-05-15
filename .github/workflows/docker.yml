@@ -1,5 +1,5 @@
 # YOLOv5 🚀 by Ultralytics, GPL-3.0 license
-# Builds ultralytics/yolov5:latest images on DockerHub https://hub.docker.com/r/ultralytics/yolov5
+# Builds ultralytics/yolov5:latest JPEGImages on DockerHub https://hub.docker.com/r/ultralytics/yolov5
 
 name: Publish Docker Images
 

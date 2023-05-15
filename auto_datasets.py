@@ -49,7 +49,7 @@ def load_model_and_predict_video(args):
             img_path = f"{args.output_dir}/images/{subset}/frame{save_idx}.png"
             cv2.imwrite(img_path, frame)
 
-            # Save labels
+            # Save Annotations
             img_data = results.xyxy[0]
             with open(f"{args.output_dir}/labels/{subset}/frame{save_idx}.txt", 'w') as f:
                 for *box, confidence, class_idx in img_data:

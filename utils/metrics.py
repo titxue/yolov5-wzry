@@ -55,7 +55,7 @@ def ap_per_class(tp, conf, pred_cls, target_cls, plot=False, save_dir='.', names
     ap, p, r = np.zeros((nc, tp.shape[1])), np.zeros((nc, 1000)), np.zeros((nc, 1000))
     for ci, c in enumerate(unique_classes):
         i = pred_cls == c
-        n_l = nt[ci]  # number of labels
+        n_l = nt[ci]  # number of Annotations
         n_p = i.sum()  # number of predictions
         if n_p == 0 or n_l == 0:
             continue

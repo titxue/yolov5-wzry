@@ -74,11 +74,11 @@ class ClearmlLogger:
 
         """
         self.current_epoch = 0
-        # Keep tracked of amount of logged images to enforce a limit
+        # Keep tracked of amount of logged JPEGImages to enforce a limit
         self.current_epoch_logged_images = set()
-        # Maximum number of images to log to clearML per epoch
+        # Maximum number of JPEGImages to log to clearML per epoch
         self.max_imgs_to_log_per_epoch = 16
-        # Get the interval of epochs when bounding box images should be logged
+        # Get the interval of epochs when bounding box JPEGImages should be logged
         self.bbox_interval = opt.bbox_interval
         self.clearml = clearml
         self.task = None
@@ -108,11 +108,11 @@ class ClearmlLogger:
 
     def log_debug_samples(self, files, title='Debug Samples'):
         """
-        Log files (images) as debug samples in the ClearML task.
+        Log files (JPEGImages) as debug samples in the ClearML task.
 
         arguments:
         files (List(PosixPath)) a list of file paths in PosixPath format
-        title (str) A title that groups together images with the same values
+        title (str) A title that groups together JPEGImages with the same values
         """
         for f in files:
             if f.exists():

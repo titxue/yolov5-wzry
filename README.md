@@ -98,14 +98,14 @@ python -m torch.distributed.run --nproc_per_node 4 --master_port 1 segment/train
 ### Val
 Validate YOLOv5m-seg accuracy on ImageNet-1k dataset:
 ```bash
-bash data/scripts/get_coco.sh --val --segments  # download COCO val segments split (780MB, 5000 images)
+bash data/scripts/get_coco.sh --val --segments  # download COCO val segments split (780MB, 5000 JPEGImages)
 python segment/val.py --weights yolov5s-seg.pt --data coco.yaml --img 640  # validate
 ```
 
 ### Predict
 Use pretrained YOLOv5m-seg.pt to predict bus.jpg:
 ```bash
-python segment/predict.py --weights yolov5m-seg.pt --data data/images/bus.jpg
+python segment/predict.py --weights yolov5m-seg.pt --data data/JPEGImages/bus.jpg
 ```
 ```python
 model = torch.hub.load('ultralytics/yolov5', 'custom', 'yolov5m-seg.pt')  # load from PyTorch Hub (WARNING: inference not yet supported)
@@ -370,14 +370,14 @@ python -m torch.distributed.run --nproc_per_node 4 --master_port 1 classify/trai
 ### Val
 Validate YOLOv5m-cls accuracy on ImageNet-1k dataset:
 ```bash
-bash data/scripts/get_imagenet.sh --val  # download ImageNet val split (6.3G, 50000 images)
+bash data/scripts/get_imagenet.sh --val  # download ImageNet val split (6.3G, 50000 JPEGImages)
 python classify/val.py --weights yolov5m-cls.pt --data ../datasets/imagenet --img 224  # validate
 ```
 
 ### Predict
 Use pretrained YOLOv5s-cls.pt to predict bus.jpg:
 ```bash
-python classify/predict.py --weights yolov5s-cls.pt --data data/images/bus.jpg
+python classify/predict.py --weights yolov5s-cls.pt --data data/JPEGImages/bus.jpg
 ```
 ```python
 model = torch.hub.load('ultralytics/yolov5', 'custom', 'yolov5s-cls.pt')  # load from PyTorch Hub

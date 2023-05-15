@@ -3,7 +3,7 @@
 Validate a trained YOLOv5 classification model on a classification dataset
 
 Usage:
-    $ bash data/scripts/get_imagenet.sh --val  # download ImageNet val split (6.3G, 50000 images)
+    $ bash data/scripts/get_imagenet.sh --val  # download ImageNet val split (6.3G, 50000 JPEGImages)
     $ python classify/val.py --weights yolov5m-cls.pt --data ../datasets/imagenet --img 224  # validate ImageNet
 
 Usage - formats:

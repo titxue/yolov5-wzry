@@ -24,7 +24,7 @@ else
   segments=false
 fi
 
-# Download/unzip labels
+# Download/unzip Annotations
 d='../datasets' # unzip directory
 url=https://github.com/ultralytics/yolov5/releases/download/v1.0/
 if [ "$segments" == "true" ]; then
@@ -35,21 +35,21 @@ fi
 echo 'Downloading' $url$f ' ...'
 curl -L $url$f -o $f -# && unzip -q $f -d $d && rm $f &
 
-# Download/unzip images
-d='../datasets/coco/images' # unzip directory
+# Download/unzip JPEGImages
+d='../datasets/coco/JPEGImages' # unzip directory
 url=http://images.cocodataset.org/zips/
 if [ "$train" == "true" ]; then
-  f='train2017.zip' # 19G, 118k images
+  f='train2017.zip' # 19G, 118k JPEGImages
   echo 'Downloading' $url$f '...'
   curl -L $url$f -o $f -# && unzip -q $f -d $d && rm $f &
 fi
 if [ "$val" == "true" ]; then
-  f='val2017.zip' # 1G, 5k images
+  f='val2017.zip' # 1G, 5k JPEGImages
   echo 'Downloading' $url$f '...'
   curl -L $url$f -o $f -# && unzip -q $f -d $d && rm $f &
 fi
 if [ "$test" == "true" ]; then
-  f='test2017.zip' # 7G, 41k images (optional)
+  f='test2017.zip' # 7G, 41k JPEGImages (optional)
   echo 'Downloading' $url$f '...'
   curl -L $url$f -o $f -# && unzip -q $f -d $d && rm $f &
 fi

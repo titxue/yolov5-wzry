@@ -14,8 +14,8 @@ from ..plots import Annotator, colors
 
 
 @threaded
-def plot_images_and_masks(images, targets, masks, paths=None, fname='images.jpg', names=None):
-    # Plot image grid with labels
+def plot_images_and_masks(images, targets, masks, paths=None, fname='JPEGImages.jpg', names=None):
+    # Plot image grid with Annotations
     if isinstance(images, torch.Tensor):
         images = images.cpu().float().numpy()
     if isinstance(targets, torch.Tensor):
@@ -26,7 +26,7 @@ def plot_images_and_masks(images, targets, masks, paths=None, fname='images.jpg'
     max_size = 1920  # max image size
     max_subplots = 16  # max image subplots, i.e. 4x4
     bs, _, h, w = images.shape  # batch size, _, height, width
-    bs = min(bs, max_subplots)  # limit plot images
+    bs = min(bs, max_subplots)  # limit plot JPEGImages
     ns = np.ceil(bs ** 0.5)  # number of subplots (square)
     if np.max(images[0]) <= 1:
         images *= 255  # de-normalise (optional)
@@ -34,7 +34,7 @@ def plot_images_and_masks(images, targets, masks, paths=None, fname='images.jpg'
     # Build Image
     mosaic = np.full((int(ns * h), int(ns * w), 3), 255, dtype=np.uint8)  # init
     for i, im in enumerate(images):
-        if i == max_subplots:  # if last batch has fewer images than we expect
+        if i == max_subplots:  # if last batch has fewer JPEGImages than we expect
             break
         x, y = int(w * (i // ns)), int(h * (i % ns))  # block origin
         im = im.transpose(1, 2, 0)
@@ -61,7 +61,7 @@ def plot_images_and_masks(images, targets, masks, paths=None, fname='images.jpg'
 
             boxes = xywh2xyxy(ti[:, 2:6]).T
             classes = ti[:, 1].astype('int')
-            labels = ti.shape[1] == 6  # labels if no conf column
+            labels = ti.shape[1] == 6  # Annotations if no conf column
             conf = None if labels else ti[:, 6]  # check for confidence presence (label vs pred)
 
             if boxes.shape[1]:

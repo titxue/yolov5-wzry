@@ -152,7 +152,7 @@ class LoadImagesAndLabelsAndMasks(LoadImagesAndLabels):  # for training/testing
                                                            shear=hyp["shear"],
                                                            perspective=hyp["perspective"])
 
-        nl = len(labels)  # number of labels
+        nl = len(labels)  # number of Annotations
         if nl:
             labels[:, 1:5] = xyxy2xywhn(labels[:, 1:5], w=img.shape[1], h=img.shape[0], clip=True, eps=1e-3)
             if self.overlap:
@@ -192,7 +192,7 @@ class LoadImagesAndLabelsAndMasks(LoadImagesAndLabels):  # for training/testing
                     labels[:, 1] = 1 - labels[:, 1]
                     masks = torch.flip(masks, dims=[2])
 
-            # Cutouts  # labels = cutout(img, labels, p=0.5)
+            # Cutouts  # Annotations = cutout(img, Annotations, p=0.5)
 
         labels_out = torch.zeros((nl, 6))
         if nl:
@@ -205,7 +205,7 @@ class LoadImagesAndLabelsAndMasks(LoadImagesAndLabels):  # for training/testing
         return (torch.from_numpy(img), labels_out, self.im_files[index], shapes, masks)
 
     def load_mosaic(self, index):
-        # YOLOv5 4-mosaic loader. Loads 1 image + 3 random images into a 4-image mosaic
+        # YOLOv5 4-mosaic loader. Loads 1 image + 3 random JPEGImages into a 4-image mosaic
         labels4, segments4 = [], []
         s = self.img_size
         yc, xc = (int(random.uniform(-x, 2 * s + x)) for x in self.mosaic_border)  # mosaic center x, y
@@ -243,7 +243,7 @@ class LoadImagesAndLabelsAndMasks(LoadImagesAndLabels):  # for training/testing
             labels4.append(labels)
             segments4.extend(segments)
 
-        # Concat/clip labels
+        # Concat/clip Annotations
         labels4 = np.concatenate(labels4, 0)
         for x in (labels4[:, 1:], *segments4):
             np.clip(x, 0, 2 * s, out=x)  # clip when using random_perspective()

@@ -360,7 +360,7 @@ class TFUpsample(keras.layers.Layer):
         self.upsample = lambda x: tf.image.resize(x, (x.shape[1] * scale_factor, x.shape[2] * scale_factor), mode)
         # self.upsample = keras.layers.UpSampling2D(size=scale_factor, interpolation=mode)
         # with default arguments: align_corners=False, half_pixel_centers=False
-        # self.upsample = lambda x: tf.raw_ops.ResizeNearestNeighbor(images=x,
+        # self.upsample = lambda x: tf.raw_ops.ResizeNearestNeighbor(JPEGImages=x,
         #                                                            size=(x.shape[1] * 2, x.shape[2] * 2))
 
     def call(self, inputs):

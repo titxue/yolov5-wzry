@@ -26,7 +26,7 @@ mkdir -p $d && cd $d
 
 # Download/unzip train
 if [ "$train" == "true" ]; then
-  wget https://image-net.org/data/ILSVRC/2012/ILSVRC2012_img_train.tar # download 138G, 1281167 images
+  wget https://image-net.org/data/ILSVRC/2012/ILSVRC2012_img_train.tar # download 138G, 1281167 JPEGImages
   mkdir train && mv ILSVRC2012_img_train.tar train/ && cd train
   tar -xf ILSVRC2012_img_train.tar && rm -f ILSVRC2012_img_train.tar
   find . -name "*.tar" | while read NAME; do
@@ -39,7 +39,7 @@ fi
 
 # Download/unzip val
 if [ "$val" == "true" ]; then
-  wget https://image-net.org/data/ILSVRC/2012/ILSVRC2012_img_val.tar # download 6.3G, 50000 images
+  wget https://image-net.org/data/ILSVRC/2012/ILSVRC2012_img_val.tar # download 6.3G, 50000 JPEGImages
   mkdir val && mv ILSVRC2012_img_val.tar val/ && cd val && tar -xf ILSVRC2012_img_val.tar
   wget -qO- https://raw.githubusercontent.com/soumith/imagenetloader.torch/master/valprep.sh | bash # move into subdirs
 fi

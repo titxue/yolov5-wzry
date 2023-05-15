@@ -159,11 +159,11 @@ class Loggers():
         # Callback runs on pre-train routine end
         if self.plots:
             plot_labels(labels, names, self.save_dir)
-            paths = self.save_dir.glob('*labels*.jpg')  # training labels
+            paths = self.save_dir.glob('*Annotations*.jpg')  # training Annotations
             if self.wandb:
                 self.wandb.log({"Labels": [wandb.Image(str(x), caption=x.name) for x in paths]})
             # if self.clearml:
-            #    pass  # ClearML saves these images automatically using hooks
+            #    pass  # ClearML saves these JPEGImages automatically using hooks
             if self.comet_logger:
                 self.comet_logger.on_pretrain_routine_end(paths)
 
@@ -276,7 +276,7 @@ class Loggers():
         files = [(self.save_dir / f) for f in files if (self.save_dir / f).exists()]  # filter
         self.logger.info(f"Results saved to {colorstr('bold', self.save_dir)}")
 
-        if self.tb and not self.clearml:  # These images are already captured by ClearML by now, we don't want doubles
+        if self.tb and not self.clearml:  # These JPEGImages are already captured by ClearML by now, we don't want doubles
             for f in files:
                 self.tb.add_image(f.stem, cv2.imread(str(f))[..., ::-1], epoch, dataformats='HWC')
 
@@ -354,7 +354,7 @@ class GenericLogger:
             self.wandb.log(metrics, step=epoch)
 
     def log_images(self, files, name='Images', epoch=0):
-        # Log images to all loggers
+        # Log JPEGImages to all loggers
         files = [Path(f) for f in (files if isinstance(files, (tuple, list)) else [files])]  # to Path
         files = [f for f in files if f.exists()]  # filter by exists
 

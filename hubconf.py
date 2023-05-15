@@ -154,10 +154,10 @@ if __name__ == '__main__':
 
     # Images
     imgs = [
-        'data/images/zidane.jpg',  # filename
+        'data/JPEGImages/zidane.jpg',  # filename
         Path('data/images/zidane.jpg'),  # Path
         'https://ultralytics.com/images/zidane.jpg',  # URI
-        cv2.imread('data/images/bus.jpg')[:, :, ::-1],  # OpenCV
+        cv2.imread('data/JPEGImages/bus.jpg')[:, :, ::-1],  # OpenCV
         Image.open('data/images/bus.jpg'),  # PIL
         np.zeros((320, 640, 3))]  # numpy
 

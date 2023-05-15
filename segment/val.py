@@ -3,7 +3,7 @@
 Validate a trained YOLOv5 segment model on a segment dataset
 
 Usage:
-    $ bash data/scripts/get_coco.sh --val --segments  # download COCO-segments val split (1G, 5000 images)
+    $ bash data/scripts/get_coco.sh --val --segments  # download COCO-segments val split (1G, 5000 JPEGImages)
     $ python segment/val.py --weights yolov5s-seg.pt --data coco.yaml --img 640  # validate COCO-segments
 
 Usage - formats:
@@ -142,7 +142,7 @@ def run(
         verbose=False,  # verbose output
         save_txt=False,  # save results to *.txt
         save_hybrid=False,  # save label+prediction hybrid results to *.txt
-        save_conf=False,  # save confidences in --save-txt labels
+        save_conf=False,  # save confidences in --save-txt Annotations
         save_json=False,  # save a COCO-JSON results file
         project=ROOT / 'runs/val-seg',  # save to project/name
         name='exp',  # save to project/name
@@ -176,7 +176,7 @@ def run(
 
         # Directories
         save_dir = increment_path(Path(project) / name, exist_ok=exist_ok)  # increment run
-        (save_dir / 'labels' if save_txt else save_dir).mkdir(parents=True, exist_ok=True)  # make dir
+        (save_dir / 'Annotations' if save_txt else save_dir).mkdir(parents=True, exist_ok=True)  # make dir
 
         # Load model
         model = DetectMultiBackend(weights, device=device, dnn=dnn, data=data, fp16=half)
@@ -211,7 +211,7 @@ def run(
                               f'classes). Pass correct combination of --weights and --data that are trained together.'
         model.warmup(imgsz=(1 if pt else batch_size, 3, imgsz, imgsz))  # warmup
         pad, rect = (0.0, False) if task == 'speed' else (0.5, pt)  # square inference for benchmarks
-        task = task if task in ('train', 'val', 'test') else 'val'  # path to train/val/test images
+        task = task if task in ('train', 'val', 'test') else 'val'  # path to train/val/test JPEGImages
         dataloader = create_dataloader(data[task],
                                        imgsz,
                                        batch_size,
@@ -275,7 +275,7 @@ def run(
         plot_masks = []  # masks for plotting
         for si, (pred, proto) in enumerate(zip(preds, protos)):
             labels = targets[targets[:, 0] == si, 1:]
-            nl, npr = labels.shape[0], pred.shape[0]  # number of labels, predictions
+            nl, npr = labels.shape[0], pred.shape[0]  # number of Annotations, predictions
             path, shape = Path(paths[si]), shapes[si][0]
             correct_masks = torch.zeros(npr, niou, dtype=torch.bool, device=device)  # init
             correct_bboxes = torch.zeros(npr, niou, dtype=torch.bool, device=device)  # init
@@ -302,8 +302,8 @@ def run(
             # Evaluate
             if nl:
                 tbox = xywh2xyxy(labels[:, 1:5])  # target boxes
-                scale_boxes(im[si].shape[1:], tbox, shape, shapes[si][1])  # native-space labels
-                labelsn = torch.cat((labels[:, 0:1], tbox), 1)  # native-space labels
+                scale_boxes(im[si].shape[1:], tbox, shape, shapes[si][1])  # native-space Annotations
+                labelsn = torch.cat((labels[:, 0:1], tbox), 1)  # native-space Annotations
                 correct_bboxes = process_batch(predn, labelsn, iouv)
                 correct_masks = process_batch(predn, labelsn, iouv, pred_masks, gt_masks, overlap=overlap, masks=True)
                 if plots:
@@ -316,14 +316,14 @@ def run(
 
             # Save/log
             if save_txt:
-                save_one_txt(predn, save_conf, shape, file=save_dir / 'labels' / f'{path.stem}.txt')
+                save_one_txt(predn, save_conf, shape, file=save_dir / 'Annotations' / f'{path.stem}.txt')
             if save_json:
                 pred_masks = scale_image(im[si].shape[1:],
                                          pred_masks.permute(1, 2, 0).contiguous().cpu().numpy(), shape, shapes[si][1])
                 save_one_json(predn, jdict, path, class_map, pred_masks)  # append to COCO-JSON dictionary
             # callbacks.run('on_val_image_end', pred, predn, path, names, im[si])
 
-        # Plot images
+        # Plot JPEGImages
         if plots and batch_i < 3:
             if len(plot_masks):
                 plot_masks = torch.cat(plot_masks, dim=0)
@@ -344,7 +344,7 @@ def run(
     pf = '%22s' + '%11i' * 2 + '%11.3g' * 8  # print format
     LOGGER.info(pf % ("all", seen, nt.sum(), *metrics.mean_results()))
     if nt.sum() == 0:
-        LOGGER.warning(f'WARNING ⚠️ no labels found in {task} set, can not compute metrics without labels')
+        LOGGER.warning(f'WARNING ⚠️ no Annotations found in {task} set, can not compute metrics without Annotations')
 
     # Print results per class
     if (verbose or (nc < 50 and not training)) and nc > 1 and len(stats):
@@ -394,7 +394,7 @@ def run(
     # Return results
     model.float()  # for training
     if not training:
-        s = f"\n{len(list(save_dir.glob('labels/*.txt')))} labels saved to {save_dir / 'labels'}" if save_txt else ''
+        s = f"\n{len(list(save_dir.glob('Annotations/*.txt')))} Annotations saved to {save_dir / 'Annotations'}" if save_txt else ''
         LOGGER.info(f"Results saved to {colorstr('bold', save_dir)}{s}")
     final_metric = mp_bbox, mr_bbox, map50_bbox, map_bbox, mp_mask, mr_mask, map50_mask, map_mask
     return (*final_metric, *(loss.cpu() / len(dataloader)).tolist()), metrics.get_maps(nc), t
@@ -417,7 +417,7 @@ def parse_opt():
     parser.add_argument('--verbose', action='store_true', help='report mAP by class')
     parser.add_argument('--save-txt', action='store_true', help='save results to *.txt')
     parser.add_argument('--save-hybrid', action='store_true', help='save label+prediction hybrid results to *.txt')
-    parser.add_argument('--save-conf', action='store_true', help='save confidences in --save-txt labels')
+    parser.add_argument('--save-conf', action='store_true', help='save confidences in --save-txt Annotations')
     parser.add_argument('--save-json', action='store_true', help='save a COCO-JSON results file')
     parser.add_argument('--project', default=ROOT / 'runs/val-seg', help='save results to project/name')
     parser.add_argument('--name', default='exp', help='save to project/name')
@@ -439,7 +439,7 @@ def main(opt):
         if opt.conf_thres > 0.001:  # https://github.com/ultralytics/yolov5/issues/1466
             LOGGER.warning(f'WARNING ⚠️ confidence threshold {opt.conf_thres} > 0.001 produces invalid results')
         if opt.save_hybrid:
-            LOGGER.warning('WARNING ⚠️ --save-hybrid returns high mAP from hybrid labels, not from predictions alone')
+            LOGGER.warning('WARNING ⚠️ --save-hybrid returns high mAP from hybrid Annotations, not from predictions alone')
         run(**vars(opt))
 
     else:

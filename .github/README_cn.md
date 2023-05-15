@@ -284,14 +284,14 @@ python -m torch.distributed.run --nproc_per_node 4 --master_port 1 classify/trai
 ### 验证
 在ImageNet-1k数据集上验证YOLOv5m-cl的准确性:
 ```bash
-bash data/scripts/get_imagenet.sh --val  # download ImageNet val split (6.3G, 50000 images)
+bash data/scripts/get_imagenet.sh --val  # download ImageNet val split (6.3G, 50000 JPEGImages)
 python classify/val.py --weights yolov5m-cls.pt --data ../datasets/imagenet --img 224  # validate
 ```
 
 ### 预测
 用提前训练好的YOLOv5s-cls.pt去预测bus.jpg:
 ```bash
-python classify/predict.py --weights yolov5s-cls.pt --data data/images/bus.jpg
+python classify/predict.py --weights yolov5s-cls.pt --data data/JPEGImages/bus.jpg
 ```
 ```python
 model = torch.hub.load('ultralytics/yolov5', 'custom', 'yolov5s-cls.pt')  # load from PyTorch Hub

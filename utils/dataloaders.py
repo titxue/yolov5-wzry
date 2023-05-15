@@ -267,8 +267,8 @@ class LoadImages:
             self._new_video(videos[0])  # new video
         else:
             self.cap = None
-        assert self.nf > 0, f'No images or videos found in {p}. ' \
-                            f'Supported formats are:\nimages: {IMG_FORMATS}\nvideos: {VID_FORMATS}'
+        assert self.nf > 0, f'No JPEGImages or videos found in {p}. ' \
+                            f'Supported formats are:\nJPEGImages: {IMG_FORMATS}\nvideos: {VID_FORMATS}'
 
     def __iter__(self):
         self.count = 0
@@ -424,13 +424,13 @@ class LoadStreams:
 
 def img2label_paths(img_paths):
     # Define label paths as a function of image paths
-    sa, sb = f'{os.sep}images{os.sep}', f'{os.sep}labels{os.sep}'  # /images/, /labels/ substrings
+    sa, sb = f'{os.sep}JPEGImages{os.sep}', f'{os.sep}Annotations{os.sep}'  # /JPEGImages/, /Annotations/ substrings
     return [sb.join(x.rsplit(sa, 1)).rsplit('.', 1)[0] + '.txt' for x in img_paths]
 
 
 class LoadImagesAndLabels(Dataset):
-    # YOLOv5 train_loader/val_loader, loads images and labels for training and validation
-    cache_version = 0.6  # dataset labels *.cache version
+    # YOLOv5 train_loader/val_loader, loads JPEGImages and Annotations for training and validation
+    cache_version = 0.6  # dataset Annotations *.cache version
     rand_interp_methods = [cv2.INTER_NEAREST, cv2.INTER_LINEAR, cv2.INTER_CUBIC, cv2.INTER_AREA, cv2.INTER_LANCZOS4]
 
     def __init__(self,
@@ -452,7 +452,7 @@ class LoadImagesAndLabels(Dataset):
         self.hyp = hyp
         self.image_weights = image_weights
         self.rect = False if image_weights else rect
-        self.mosaic = self.augment and not self.rect  # load 4 images at a time into a mosaic (only during training)
+        self.mosaic = self.augment and not self.rect  # load 4 JPEGImages at a time into a mosaic (only during training)
         self.mosaic_border = [-img_size // 2, -img_size // 2]
         self.stride = stride
         self.path = path
@@ -475,12 +475,12 @@ class LoadImagesAndLabels(Dataset):
                     raise FileNotFoundError(f'{prefix}{p} does not exist')
             self.im_files = sorted(x.replace('/', os.sep) for x in f if x.split('.')[-1].lower() in IMG_FORMATS)
             # self.img_files = sorted([x for x in f if x.suffix[1:].lower() in IMG_FORMATS])  # pathlib
-            assert self.im_files, f'{prefix}No images found'
+            assert self.im_files, f'{prefix}No JPEGImages found'
         except Exception as e:
             raise Exception(f'{prefix}Error loading data from {path}: {e}\n{HELP_URL}') from e
 
         # Check cache
-        self.label_files = img2label_paths(self.im_files)  # labels
+        self.label_files = img2label_paths(self.im_files)  # Annotations
         cache_path = (p if p.is_file() else Path(self.label_files[0]).parent).with_suffix('.cache')
         try:
             cache, exists = np.load(cache_path, allow_pickle=True).item(), True  # load dict
@@ -492,26 +492,26 @@ class LoadImagesAndLabels(Dataset):
         # Display cache
         nf, nm, ne, nc, n = cache.pop('results')  # found, missing, empty, corrupt, total
         if exists and LOCAL_RANK in {-1, 0}:
-            d = f"Scanning {cache_path}... {nf} images, {nm + ne} backgrounds, {nc} corrupt"
+            d = f"Scanning {cache_path}... {nf} JPEGImages, {nm + ne} backgrounds, {nc} corrupt"
             tqdm(None, desc=prefix + d, total=n, initial=n, bar_format=TQDM_BAR_FORMAT)  # display cache results
             if cache['msgs']:
                 LOGGER.info('\n'.join(cache['msgs']))  # display warnings
-        assert nf > 0 or not augment, f'{prefix}No labels found in {cache_path}, can not start training. {HELP_URL}'
+        assert nf > 0 or not augment, f'{prefix}No Annotations found in {cache_path}, can not start training. {HELP_URL}'
 
         # Read cache
         [cache.pop(k) for k in ('hash', 'version', 'msgs')]  # remove items
         labels, shapes, self.segments = zip(*cache.values())
-        nl = len(np.concatenate(labels, 0))  # number of labels
-        assert nl > 0 or not augment, f'{prefix}All labels empty in {cache_path}, can not start training. {HELP_URL}'
+        nl = len(np.concatenate(labels, 0))  # number of Annotations
+        assert nl > 0 or not augment, f'{prefix}All Annotations empty in {cache_path}, can not start training. {HELP_URL}'
         self.labels = list(labels)
         self.shapes = np.array(shapes)
         self.im_files = list(cache.keys())  # update
         self.label_files = img2label_paths(cache.keys())  # update
 
-        # Filter images
+        # Filter JPEGImages
         if min_items:
             include = np.array([len(x) >= min_items for x in self.labels]).nonzero()[0].astype(int)
-            LOGGER.info(f'{prefix}{n - len(include)}/{n} images filtered from dataset')
+            LOGGER.info(f'{prefix}{n - len(include)}/{n} JPEGImages filtered from dataset')
             self.im_files = [self.im_files[i] for i in include]
             self.label_files = [self.label_files[i] for i in include]
             self.labels = [self.labels[i] for i in include]
@@ -519,15 +519,15 @@ class LoadImagesAndLabels(Dataset):
             self.shapes = self.shapes[include]  # wh
 
         # Create indices
-        n = len(self.shapes)  # number of images
+        n = len(self.shapes)  # number of JPEGImages
         bi = np.floor(np.arange(n) / batch_size).astype(int)  # batch index
         nb = bi[-1] + 1  # number of batches
         self.batch = bi  # batch index of image
         self.n = n
         self.indices = range(n)
 
-        # Update labels
-        include_class = []  # filter labels to include only these classes (optional)
+        # Update Annotations
+        include_class = []  # filter Annotations to include only these classes (optional)
         include_class_array = np.array(include_class).reshape(1, -1)
         for i, (label, segment) in enumerate(zip(self.labels, self.segments)):
             if include_class:
@@ -565,13 +565,13 @@ class LoadImagesAndLabels(Dataset):
 
             self.batch_shapes = np.ceil(np.array(shapes) * img_size / stride + pad).astype(int) * stride
 
-        # Cache images into RAM/disk for faster training
+        # Cache JPEGImages into RAM/disk for faster training
         if cache_images == 'ram' and not self.check_cache_ram(prefix=prefix):
             cache_images = False
         self.ims = [None] * n
         self.npy_files = [Path(f).with_suffix('.npy') for f in self.im_files]
         if cache_images:
-            b, gb = 0, 1 << 30  # bytes of cached images, bytes per gigabytes
+            b, gb = 0, 1 << 30  # bytes of cached JPEGImages, bytes per gigabytes
             self.im_hw0, self.im_hw = [None] * n, [None] * n
             fcn = self.cache_images_to_disk if cache_images == 'disk' else self.load_image
             results = ThreadPool(NUM_THREADS).imap(fcn, range(n))
@@ -582,13 +582,13 @@ class LoadImagesAndLabels(Dataset):
                 else:  # 'ram'
                     self.ims[i], self.im_hw0[i], self.im_hw[i] = x  # im, hw_orig, hw_resized = load_image(self, i)
                     b += self.ims[i].nbytes
-                pbar.desc = f'{prefix}Caching images ({b / gb:.1f}GB {cache_images})'
+                pbar.desc = f'{prefix}Caching JPEGImages ({b / gb:.1f}GB {cache_images})'
             pbar.close()
 
     def check_cache_ram(self, safety_margin=0.1, prefix=''):
         # Check image caching requirements vs available memory
-        b, gb = 0, 1 << 30  # bytes of cached images, bytes per gigabytes
-        n = min(self.n, 30)  # extrapolate from 30 random images
+        b, gb = 0, 1 << 30  # bytes of cached JPEGImages, bytes per gigabytes
+        n = min(self.n, 30)  # extrapolate from 30 random JPEGImages
         for _ in range(n):
             im = cv2.imread(random.choice(self.im_files))  # sample image
             ratio = self.img_size / max(im.shape[0], im.shape[1])  # max(h, w)  # ratio
@@ -599,11 +599,11 @@ class LoadImagesAndLabels(Dataset):
         if not cache:
             LOGGER.info(f"{prefix}{mem_required / gb:.1f}GB RAM required, "
                         f"{mem.available / gb:.1f}/{mem.total / gb:.1f}GB available, "
-                        f"{'caching images ✅' if cache else 'not caching images ⚠️'}")
+                        f"{'caching JPEGImages ✅' if cache else 'not caching JPEGImages ⚠️'}")
         return cache
 
-    def cache_labels(self, path=Path('./labels.cache'), prefix=''):
-        # Cache dataset labels, check images and read shapes
+    def cache_labels(self, path=Path('./Annotations.cache'), prefix=''):
+        # Cache dataset Annotations, check JPEGImages and read shapes
         x = {}  # dict
         nm, nf, ne, nc, msgs = 0, 0, 0, 0, []  # number missing, found, empty, corrupt, messages
         desc = f"{prefix}Scanning {path.parent / path.stem}..."
@@ -621,13 +621,13 @@ class LoadImagesAndLabels(Dataset):
                     x[im_file] = [lb, shape, segments]
                 if msg:
                     msgs.append(msg)
-                pbar.desc = f"{desc} {nf} images, {nm + ne} backgrounds, {nc} corrupt"
+                pbar.desc = f"{desc} {nf} JPEGImages, {nm + ne} backgrounds, {nc} corrupt"
 
         pbar.close()
         if msgs:
             LOGGER.info('\n'.join(msgs))
         if nf == 0:
-            LOGGER.warning(f'{prefix}WARNING ⚠️ No labels found in {path}. {HELP_URL}')
+            LOGGER.warning(f'{prefix}WARNING ⚠️ No Annotations found in {path}. {HELP_URL}')
         x['hash'] = get_hash(self.label_files + self.im_files)
         x['results'] = nf, nm, ne, nc, len(self.im_files)
         x['msgs'] = msgs  # warnings
@@ -685,7 +685,7 @@ class LoadImagesAndLabels(Dataset):
                                                  shear=hyp['shear'],
                                                  perspective=hyp['perspective'])
 
-        nl = len(labels)  # number of labels
+        nl = len(labels)  # number of Annotations
         if nl:
             labels[:, 1:5] = xyxy2xywhn(labels[:, 1:5], w=img.shape[1], h=img.shape[0], clip=True, eps=1E-3)
 
@@ -710,8 +710,8 @@ class LoadImagesAndLabels(Dataset):
                     labels[:, 1] = 1 - labels[:, 1]
 
             # Cutouts
-            # labels = cutout(img, labels, p=0.5)
-            # nl = len(labels)  # update after cutout
+            # Annotations = cutout(img, Annotations, p=0.5)
+            # nl = len(Annotations)  # update after cutout
 
         labels_out = torch.zeros((nl, 6))
         if nl:
@@ -747,7 +747,7 @@ class LoadImagesAndLabels(Dataset):
             np.save(f.as_posix(), cv2.imread(self.im_files[i]))
 
     def load_mosaic(self, index):
-        # YOLOv5 4-mosaic loader. Loads 1 image + 3 random images into a 4-image mosaic
+        # YOLOv5 4-mosaic loader. Loads 1 image + 3 random JPEGImages into a 4-image mosaic
         labels4, segments4 = [], []
         s = self.img_size
         yc, xc = (int(random.uniform(-x, 2 * s + x)) for x in self.mosaic_border)  # mosaic center x, y
@@ -784,7 +784,7 @@ class LoadImagesAndLabels(Dataset):
             labels4.append(labels)
             segments4.extend(segments)
 
-        # Concat/clip labels
+        # Concat/clip Annotations
         labels4 = np.concatenate(labels4, 0)
         for x in (labels4[:, 1:], *segments4):
             np.clip(x, 0, 2 * s, out=x)  # clip when using random_perspective()
@@ -805,7 +805,7 @@ class LoadImagesAndLabels(Dataset):
         return img4, labels4
 
     def load_mosaic9(self, index):
-        # YOLOv5 9-mosaic loader. Loads 1 image + 8 random images into a 9-image mosaic
+        # YOLOv5 9-mosaic loader. Loads 1 image + 8 random JPEGImages into a 9-image mosaic
         labels9, segments9 = [], []
         s = self.img_size
         indices = [index] + random.choices(self.indices, k=8)  # 8 additional image indices
@@ -856,7 +856,7 @@ class LoadImagesAndLabels(Dataset):
         yc, xc = (int(random.uniform(0, s)) for _ in self.mosaic_border)  # mosaic center x, y
         img9 = img9[yc:yc + 2 * s, xc:xc + 2 * s]
 
-        # Concat/clip labels
+        # Concat/clip Annotations
         labels9 = np.concatenate(labels9, 0)
         labels9[:, [1, 3]] -= xc
         labels9[:, [2, 4]] -= yc
@@ -928,7 +928,7 @@ def flatten_recursive(path=DATASETS_DIR / 'coco128'):
 
 def extract_boxes(path=DATASETS_DIR / 'coco128'):  # from utils.dataloaders import *; extract_boxes()
     # Convert detection dataset into classification dataset, with one directory per class
-    path = Path(path)  # images dir
+    path = Path(path)  # JPEGImages dir
     shutil.rmtree(path / 'classification') if (path / 'classification').is_dir() else None  # remove existing
     files = list(path.rglob('*.*'))
     n = len(files)  # number of files
@@ -938,11 +938,11 @@ def extract_boxes(path=DATASETS_DIR / 'coco128'):  # from utils.dataloaders impo
             im = cv2.imread(str(im_file))[..., ::-1]  # BGR to RGB
             h, w = im.shape[:2]
 
-            # labels
+            # Annotations
             lb_file = Path(img2label_paths([str(im_file)])[0])
             if Path(lb_file).exists():
                 with open(lb_file) as f:
-                    lb = np.array([x.split() for x in f.read().strip().splitlines()], dtype=np.float32)  # labels
+                    lb = np.array([x.split() for x in f.read().strip().splitlines()], dtype=np.float32)  # Annotations
 
                 for j, x in enumerate(lb):
                     c = int(x[0])  # class
@@ -960,15 +960,15 @@ def extract_boxes(path=DATASETS_DIR / 'coco128'):  # from utils.dataloaders impo
                     assert cv2.imwrite(str(f), im[b[1]:b[3], b[0]:b[2]]), f'box failure in {f}'
 
 
-def autosplit(path=DATASETS_DIR / 'coco128/images', weights=(0.9, 0.1, 0.0), annotated_only=False):
+def autosplit(path=DATASETS_DIR / 'coco128/JPEGImages', weights=(0.9, 0.1, 0.0), annotated_only=False):
     """ Autosplit a dataset into train/val/test splits and save path/autosplit_*.txt files
     Usage: from utils.dataloaders import *; autosplit()
     Arguments
-        path:            Path to images directory
+        path:            Path to JPEGImages directory
         weights:         Train, val, test weights (list, tuple)
-        annotated_only:  Only use images with an annotated txt file
+        annotated_only:  Only use JPEGImages with an annotated txt file
     """
-    path = Path(path)  # images dir
+    path = Path(path)  # JPEGImages dir
     files = sorted(x for x in path.rglob('*.*') if x.suffix[1:].lower() in IMG_FORMATS)  # image files only
     n = len(files)  # number of files
     random.seed(0)  # for reproducibility
@@ -979,7 +979,7 @@ def autosplit(path=DATASETS_DIR / 'coco128/images', weights=(0.9, 0.1, 0.0), ann
         if (path.parent / x).exists():
             (path.parent / x).unlink()  # remove existing
 
-    print(f'Autosplitting images from {path}' + ', using *.txt labeled images only' * annotated_only)
+    print(f'Autosplitting JPEGImages from {path}' + ', using *.txt labeled JPEGImages only' * annotated_only)
     for i, img in tqdm(zip(indices, files), total=n):
         if not annotated_only or Path(img2label_paths([str(img)])[0]).exists():  # check label
             with open(path.parent / txt[i], 'a') as f:
@@ -991,7 +991,7 @@ def verify_image_label(args):
     im_file, lb_file, prefix = args
     nm, nf, ne, nc, msg, segments = 0, 0, 0, 0, '', []  # number (missing, found, empty, corrupt), message, segments
     try:
-        # verify images
+        # verify JPEGImages
         im = Image.open(im_file)
         im.verify()  # PIL verify
         shape = exif_size(im)  # image size
@@ -1004,7 +1004,7 @@ def verify_image_label(args):
                     ImageOps.exif_transpose(Image.open(im_file)).save(im_file, 'JPEG', subsampling=0, quality=100)
                     msg = f'{prefix}WARNING ⚠️ {im_file}: corrupt JPEG restored and saved'
 
-        # verify labels
+        # verify Annotations
         if os.path.isfile(lb_file):
             nf = 1  # label found
             with open(lb_file) as f:
@@ -1016,7 +1016,7 @@ def verify_image_label(args):
                 lb = np.array(lb, dtype=np.float32)
             nl = len(lb)
             if nl:
-                assert lb.shape[1] == 5, f'labels require 5 columns, {lb.shape[1]} columns detected'
+                assert lb.shape[1] == 5, f'Annotations require 5 columns, {lb.shape[1]} columns detected'
                 assert (lb >= 0).all(), f'negative label values {lb[lb < 0]}'
                 assert (lb[:, 1:] <= 1).all(), f'non-normalized or out of bounds coordinates {lb[:, 1:][lb[:, 1:] > 1]}'
                 _, i = np.unique(lb, axis=0, return_index=True)
@@ -1024,7 +1024,7 @@ def verify_image_label(args):
                     lb = lb[i]  # remove duplicates
                     if segments:
                         segments = [segments[x] for x in i]
-                    msg = f'{prefix}WARNING ⚠️ {im_file}: {nl - len(i)} duplicate labels removed'
+                    msg = f'{prefix}WARNING ⚠️ {im_file}: {nl - len(i)} duplicate Annotations removed'
             else:
                 ne = 1  # label empty
                 lb = np.zeros((0, 5), dtype=np.float32)
@@ -1066,8 +1066,8 @@ class HUBDatasetStats():
 
         check_dataset(data, autodownload)  # download dataset if missing
         self.hub_dir = Path(data['path'] + '-hub')
-        self.im_dir = self.hub_dir / 'images'
-        self.im_dir.mkdir(parents=True, exist_ok=True)  # makes /images
+        self.im_dir = self.hub_dir / 'JPEGImages'
+        self.im_dir.mkdir(parents=True, exist_ok=True)  # makes /JPEGImages
         self.stats = {'nc': data['nc'], 'names': list(data['names'].values())}  # statistics dictionary
         self.data = data
 
@@ -1113,7 +1113,7 @@ class HUBDatasetStats():
     def get_json(self, save=False, verbose=False):
         # Return dataset JSON for Ultralytics HUB
         def _round(labels):
-            # Update labels to integer class and 6 decimal place floats
+            # Update Annotations to integer class and 6 decimal place floats
             return [[int(c), *(round(x, 4) for x in points)] for c, *points in labels]
 
         for split in 'train', 'val', 'test':
@@ -1132,7 +1132,7 @@ class HUBDatasetStats():
                     'total': dataset.n,
                     'unlabelled': int(np.all(x == 0, 1).sum()),
                     'per_class': (x > 0).sum(0).tolist()},
-                'labels': [{
+                'Annotations': [{
                     str(Path(k).name): _round(v.tolist())} for k, v in zip(dataset.im_files, dataset.labels)]}
 
         # Save, print and return
@@ -1146,15 +1146,15 @@ class HUBDatasetStats():
         return self.stats
 
     def process_images(self):
-        # Compress images for Ultralytics HUB
+        # Compress JPEGImages for Ultralytics HUB
         for split in 'train', 'val', 'test':
             if self.data.get(split) is None:
                 continue
             dataset = LoadImagesAndLabels(self.data[split])  # load dataset
-            desc = f'{split} images'
+            desc = f'{split} JPEGImages'
             for _ in tqdm(ThreadPool(NUM_THREADS).imap(self._hub_ops, dataset.im_files), total=dataset.n, desc=desc):
                 pass
-        print(f'Done. All images saved to {self.im_dir}')
+        print(f'Done. All JPEGImages saved to {self.im_dir}')
         return self.im_dir
 
 
